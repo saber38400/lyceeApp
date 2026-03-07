@@ -23,19 +23,8 @@ body {font-family: Arial, Helvetica, sans-serif;}
 <body>
 
 	<h3>Success Page</h3>
-	<%
-		
-		 response.setHeader("Cache-control", "no-cache, no-store, must-revalidate");
-		
-		if(session.getAttribute("username")==null)
-		{
-			response.sendRedirect("/login");
-		}
-	
-	%>
-	Welcome, ${sessionScope.username }
+	Welcome, ${sessionScope.username}
 	<br>
-	
-	<a href="${pageContext.request.contextPath }/logout">Logout</a>
+	<a href="${pageContext.request.contextPath}/logout">Logout</a>
 </body>
 </html>

@@ -8,10 +8,10 @@ import com.lycee.lycee_app.model.User;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
 	
-	@Query("from User where user_email=?1")
-	public List<User> findByEMAIL(String email);
-	
-	@Query("from User where user_email=?1 and user_pass=?2")
-	public User findByUsernamePassword(String username,String password);
+		@Query("from User where user_email=?1 and user_pass=?2")
+		public User findByUserEmailAndUserPass(String user_email, String user_pass);
+
+		@Query("from User where user_email=?1")
+		public List<User> findByUserEmail(String user_email);
 
 }

@@ -49,9 +49,9 @@ public class UserController
     public ModelAndView addUser(@RequestParam("user_email") String user_email, User user)
      {
         ModelAndView mv=new ModelAndView("success");
-        List<User> list= urepo.findByEMAIL(user_email);
+        List<User> list= urepo.findByUserEmail(user_email);
         
-        if(list.size()!=0)
+        if(!list.isEmpty())
         {
         mv.addObject("message", "Oops! There is already a user registered with the email provided.");
         
@@ -71,34 +71,22 @@ public class UserController
     }
 
     @PostMapping("/login")
-    public String login_user(@RequestParam("username") String username, @RequestParam("password") String password,
-        HttpSession session,ModelMap modelMap)
+    public String login_user(@RequestParam("user_email") String email,
+                         @RequestParam("user_pass") String pass,
+                         HttpSession session,
+                         ModelMap modelMap) 
+{
+        User user = urepo.findByUserEmailAndUserPass(email, pass);
 
+        if(user!=null)
         {
+            session.setAttribute("username", email);
+            return "dummy";
 
-        User auser = urepo.findByUsernamePassword(username, password);
-
-        if(auser!=null)
-        {
-            String uname=auser.getUser_email();
-            String upass=auser.getUser_pass();
-
-            if(username.equalsIgnoreCase(uname) && password.equalsIgnoreCase(upass))
-            {
-                session.setAttribute("username",username);
-                return "dummy";
-            }
-            else 
-            {
-                modelMap.put("error", "Invalid Account");
-                return "login";
-            }
         }
-        else 
-        {
-            modelMap.put("error", "Invalid Account");
-            return "login";
-        }
+
+        modelMap.put("error", "Invalid Account");
+        return "login";
 
         }
 

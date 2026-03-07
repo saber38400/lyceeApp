@@ -14,35 +14,36 @@ h3{
   font-weight: bold; 
   color:SlateBlue;
   text-align: center; 
-  text-decoration: underline
+  text-decoration: underline;
 }
 body {font-family: Arial, Helvetica, sans-serif;}
 * {box-sizing: border-box;}
-
 </style> 
 </head>
 <body>
 
 <h3>Login Page</h3>
 
-	${error}
-	<form method="post" action="${pageContext.request.contextPath }/login">
-		
-		<table border="0" cellpadding="2" cellspacing="2">
-			<tr>
-				<td>UserName(E-mail)</td>
-				<td><input type="text" name="username"></td>
-			</tr>
-			<tr>
-				<td>Password</td>
-				<td><input type="password" name="password"></td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><input type="submit" value="Login"></td>
-			</tr>
-		</table>
-	</form>
+<c:if test="${not empty error}">
+    <div style="color:red">${error}</div>
+</c:if>
+
+<form method="post" action="${pageContext.request.contextPath}/login">
+    <table border="0" cellpadding="2" cellspacing="2">
+        <tr>
+            <td>Email</td>
+            <td><input type="text" name="user_email" required></td>
+        </tr>
+        <tr>
+            <td>Password</td>
+            <td><input type="password" name="user_pass" required></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td><input type="submit" value="Login"></td>
+        </tr>
+    </table>
+</form>
 
 </body>
 </html>
