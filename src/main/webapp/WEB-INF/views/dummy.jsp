@@ -1,30 +1,54 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-    pageEncoding="ISO-8859-1" %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="ISO-8859-1">
-<title>Dummy Page</title>
-<style>  
-h3{
-  font-family: Calibri; 
-  font-size: 25pt;         
-  font-style: normal; 
-  font-weight: bold; 
-  color:SlateBlue;
-  text-align: center; 
-  text-decoration: underline
-}
-body {font-family: Arial, Helvetica, sans-serif;}
-* {box-sizing: border-box;}
+<%@ page language="java" contentType="text/html; charset=UTF-8"
 
-</style> 
-</head>
-<body>
+                    <c:choose>
 
-	<h3>Success Page</h3>
-	Welcome, ${sessionScope.username}
-	<br>
-	<a href="${pageContext.request.contextPath}/logout">Logout</a>
+                        <c:when test="${post.fileType.startsWith('image')}">
+
+                            <img src="/uploads/${post.fileName}">
+
+                        </c:when>
+
+                        <c:when test="${post.fileType.startsWith('video')}">
+
+                            <video controls>
+                                <source src="/uploads/${post.fileName}">
+                            </video>
+
+                        </c:when>
+
+                    </c:choose>
+
+                </c:if>
+
+            </div>
+
+        </c:forEach>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Emploi du temps</h2>
+
+        <div class="schedule-item">
+            08:00 - Mathématiques
+        </div>
+
+        <div class="schedule-item">
+            10:00 - Informatique
+        </div>
+
+        <div class="schedule-item">
+            13:00 - Anglais
+        </div>
+
+        <div class="schedule-item">
+            15:00 - Sport
+        </div>
+
+    </div>
+
+</div>
+
 </body>
 </html>
