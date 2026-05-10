@@ -82,25 +82,27 @@ public class UserController
         return "dummy";
     }
 
-    @PostMapping("/login")
-    public String login_user(@RequestParam("user_email") String email,
+        @PostMapping("/login")
+        public String login_user(@RequestParam("user_email") String email,
                          @RequestParam("user_pass") String pass,
                          HttpSession session,
-                         ModelMap modelMap) 
-{
+                         ModelMap modelMap)
+        {
         User user = urepo.findByUserEmailAndUserPass(email, pass);
 
-        if(user!=null)
+        if(user != null)
         {
             session.setAttribute("username", email);
-            return "dummy";
 
+            modelMap.addAttribute("posts", java.util.Collections.emptyList());
+
+            return "dummy";
         }
 
         modelMap.put("error", "Invalid Account");
-        return "login";
 
-        }
+        return "login";
+    }
 
     @GetMapping(value = "/logout")
         public String logout_user(HttpSession session)
