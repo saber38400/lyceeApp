@@ -12,7 +12,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import com.lycee.lycee_app.model.Post;
+import com.lycee.lycee_app.repository.PostRepository;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
 import com.lycee.lycee_app.model.User;
 import com.lycee.lycee_app.repository.UserRepository;
 
@@ -24,6 +30,9 @@ public class UserController
 
     @Autowired
     UserRepository urepo;
+
+    @Autowired
+    PostRepository prepo;
 
 
     @RequestMapping("/")
@@ -65,8 +74,11 @@ public class UserController
         return mv;
     }
     @GetMapping("/dummy")
-    public String dummy()
+    public String dummy(ModelMap modelMap)
     {
+        modelMap.addAttribute("posts", prepo.findAll());
+        Collections.reverse((List<?>) modelMap.get("posts"));
+
         return "dummy";
     }
 
@@ -97,5 +109,38 @@ public class UserController
             session.invalidate();
             return "redirect:/login";
         }
-            
+
+    @PostMapping("/createPost")
+    public String createPost(@RequestParam("content") String content,
+                                 @RequestParam("file") MultipartFile file,
+                                 HttpSession session) throws IOException {
+
+        Post post = new Post();
+
+        post.setAuthor((String) session.getAttribute("username"));
+        post.setContent(content);
+
+        if (!file.isEmpty()) {
+
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+
+            File dir = new File(uploadDir);
+
+            if (!dir.exists()) {
+            dir.mkdirs();
+            }
+
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+
+            file.transferTo(new File(uploadDir + fileName));
+
+            post.setFileName(fileName);
+            post.setFileType(file.getContentType());
     }
+
+    prepo.save(post);
+
+    return "redirect:/dummy";
+    }
+            
+}
