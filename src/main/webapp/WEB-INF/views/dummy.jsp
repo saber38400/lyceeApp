@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
 <html>
@@ -71,13 +72,53 @@ button{
     margin-top:15px;
 }
 
+.datetime{
+    position:absolute;
+    top:20px;
+    right:30px;
+    color:white;
+    text-align:right;
+    font-size:14px;
+    font-weight:bold;
+}
+
 </style>
 
 </head>
 
+<script>
+
+function updateDateTime()
+{
+    const now = new Date();
+
+    const date = now.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    const time = now.toLocaleTimeString('fr-FR');
+
+    document.getElementById("date").innerHTML = date;
+    document.getElementById("clock").innerHTML = time;
+}
+
+setInterval(updateDateTime, 1000);
+
+updateDateTime();
+
+</script>
+
 <body>
 
 <div class="header">
+
+    <div class="datetime">
+    <div id="date"></div>
+    <div id="clock"></div>
+</div>
 
     <h1>Espace Étudiant</h1>
 
@@ -98,15 +139,22 @@ button{
 
         <h2>Créer une publication</h2>
 
-        <form method="post">
+    <form action="${pageContext.request.contextPath}/createPost"
+        method="post"
+        enctype="multipart/form-data">
 
-            <textarea placeholder="Écris quelque chose..."></textarea>
+        <textarea name="content"
+                placeholder="Écris quelque chose..."></textarea>
 
-            <br>
+        <br><br>
 
-            <button type="submit">Publier</button>
+        <input type="file" name="file">
 
-        </form>
+        <br>
+
+        <button type="submit">Publier</button>
+
+    </form>
 
     </div>
 
@@ -114,15 +162,40 @@ button{
 
         <h2>Fil d'actualité</h2>
 
-        <div class="post">
-            <h3>Annonce école</h3>
-            <p>Bienvenue sur le nouveau réseau scolaire du lycée.</p>
-        </div>
+<c:forEach var="post" items="${posts}">
 
-        <div class="post">
-            <h3>Vie scolaire</h3>
-            <p>Les emplois du temps seront bientôt disponibles.</p>
-        </div>
+    <div class="post">
+
+        <h3>${post.author}</h3>
+
+        <p>${post.content}</p>
+
+        <c:if test="${not empty post.fileName}">
+
+            <c:choose>
+
+                <c:when test="${post.fileType.startsWith('image')}">
+
+                    <img src="${pageContext.request.contextPath}/uploads/${post.fileName}"
+                         width="300">
+
+                </c:when>
+
+                <c:when test="${post.fileType.startsWith('video')}">
+
+                    <video width="400" controls>
+                        <source src="${pageContext.request.contextPath}/uploads/${post.fileName}">
+                    </video>
+
+                </c:when>
+
+            </c:choose>
+
+        </c:if>
+
+    </div>
+
+</c:forEach>
 
     </div>
 

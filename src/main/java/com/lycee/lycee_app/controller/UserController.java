@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +16,16 @@ import org.springframework.web.servlet.ModelAndView;
 import com.lycee.lycee_app.model.Post;
 import com.lycee.lycee_app.repository.PostRepository;
 import org.springframework.web.multipart.MultipartFile;
+import com.lycee.lycee_app.model.Post;
+import com.lycee.lycee_app.repository.PostRepository;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.util.UUID;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -30,6 +40,9 @@ public class UserController
 
     @Autowired
     UserRepository urepo;
+
+    @Autowired
+    private PostRepository postRepo;
 
     @Autowired
     PostRepository prepo;
@@ -73,14 +86,13 @@ public class UserController
 
         return mv;
     }
-    @GetMapping("/dummy")
-    public String dummy(ModelMap modelMap)
-    {
-        modelMap.addAttribute("posts", prepo.findAll());
-        Collections.reverse((List<?>) modelMap.get("posts"));
 
-        return "dummy";
-    }
+        @GetMapping("/dummy")
+        public String dummy(Model model)
+        {
+            model.addAttribute("posts", postRepo.findAll());
+            return "dummy";
+        }
 
         @PostMapping("/login")
         public String login_user(@RequestParam("user_email") String email,
@@ -96,9 +108,8 @@ public class UserController
 
             modelMap.addAttribute("posts", java.util.Collections.emptyList());
 
-            return "dummy";
+        return "redirect:/dummy";        
         }
-
         modelMap.put("error", "Invalid Account");
 
         return "login";
@@ -113,36 +124,43 @@ public class UserController
         }
 
     @PostMapping("/createPost")
-    public String createPost(@RequestParam("content") String content,
-                                 @RequestParam("file") MultipartFile file,
-                                 HttpSession session) throws IOException {
+    public String createPost(
+            @RequestParam("content") String content,
+            @RequestParam("media") MultipartFile media,
+            HttpSession session)
+{
+        try
+        {
+            Post post = new Post();
 
-        Post post = new Post();
+            post.setAuthor((String) session.getAttribute("username"));
 
-        post.setAuthor((String) session.getAttribute("username"));
-        post.setContent(content);
+            post.setContent(content);
 
-        if (!file.isEmpty()) {
+            if(!media.isEmpty())
+            {
+                String fileName = UUID.randomUUID() + "_" + media.getOriginalFilename();
 
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+                Path uploadPath = Paths.get("uploads/");
 
-            File dir = new File(uploadDir);
+                if(!Files.exists(uploadPath))
+                {
+                    Files.createDirectories(uploadPath);
+                }
 
-            if (!dir.exists()) {
-            dir.mkdirs();
+                Files.copy(media.getInputStream(), uploadPath.resolve(fileName));
+
+                post.setFileName(fileName);
             }
 
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            prepo.save(post);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
 
-            file.transferTo(new File(uploadDir + fileName));
-
-            post.setFileName(fileName);
-            post.setFileType(file.getContentType());
-    }
-
-    prepo.save(post);
-
-    return "redirect:/dummy";
+        return "redirect:/dummy";
     }
             
 }
