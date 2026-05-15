@@ -2,7 +2,6 @@ package com.lycee.lycee_app.controller;
 
 import java.util.List;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,22 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import com.lycee.lycee_app.model.Post;
 import com.lycee.lycee_app.repository.PostRepository;
-import org.springframework.web.multipart.MultipartFile;
-import com.lycee.lycee_app.model.Post;
-import com.lycee.lycee_app.repository.PostRepository;
-
-import org.springframework.web.multipart.MultipartFile;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import java.util.UUID;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
 import com.lycee.lycee_app.model.User;
 import com.lycee.lycee_app.repository.UserRepository;
 
@@ -43,9 +27,6 @@ public class UserController
 
     @Autowired
     private PostRepository postRepo;
-
-    @Autowired
-    PostRepository prepo;
 
 
     @RequestMapping("/")
@@ -79,10 +60,13 @@ public class UserController
         
         }
         else
+    {
+        if(user != null)
         {
             urepo.save(user);
             mv.addObject("message", "User has been successfully registered.");
         }
+    }
 
         return mv;
     }
@@ -122,45 +106,5 @@ public class UserController
             session.invalidate();
             return "redirect:/login";
         }
-
-    @PostMapping("/createPost")
-    public String createPost(
-            @RequestParam("content") String content,
-            @RequestParam("media") MultipartFile media,
-            HttpSession session)
-{
-        try
-        {
-            Post post = new Post();
-
-            post.setAuthor((String) session.getAttribute("username"));
-
-            post.setContent(content);
-
-            if(!media.isEmpty())
-            {
-                String fileName = UUID.randomUUID() + "_" + media.getOriginalFilename();
-
-                Path uploadPath = Paths.get("uploads/");
-
-                if(!Files.exists(uploadPath))
-                {
-                    Files.createDirectories(uploadPath);
-                }
-
-                Files.copy(media.getInputStream(), uploadPath.resolve(fileName));
-
-                post.setFileName(fileName);
-            }
-
-            prepo.save(post);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        return "redirect:/dummy";
-    }
             
 }
