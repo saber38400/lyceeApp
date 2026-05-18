@@ -166,9 +166,50 @@ updateDateTime();
 
     <div class="post">
 
-        <h3>${post.author}</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
 
-        <p>${post.content}</p>
+            <h3>${post.author}</h3>
+
+            <div>
+
+                <button onclick="toggleEdit('${post.id}')">
+                    Modifier
+                </button>
+
+                <a href="${pageContext.request.contextPath}/deletePost/${post.id}">
+                    <button type="button">
+                        Supprimer
+                    </button>
+                </a>
+
+            </div>
+
+        </div>
+
+        <c:if test="${not empty post.content}">
+            <p>${post.content}</p>
+        </c:if>
+
+        <div id="edit-${post.id}" style="display:none; margin-top:10px;">
+
+            <form action="${pageContext.request.contextPath}/editPost"
+                  method="post">
+
+                <input type="hidden"
+                        name="id"
+                        value="${post.id}">
+
+                <textarea name="content">${post.content}</textarea>
+
+                <br>
+
+                <button type="submit">
+                    Sauvegarder
+                </button>
+
+            </form>
+
+        </div>
 
         <c:if test="${not empty post.fileName}">
 
@@ -191,6 +232,19 @@ updateDateTime();
 
             </c:choose>
 
+            <br><br>
+
+            <a href="${pageContext.request.contextPath}/download/${post.fileName}">
+                <button type="button">
+                    Télécharger
+                </button>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/deleteFile/${post.id}">
+                <button type="button">
+                    Supprimer le fichier
+                </button>
+            </a>
         </c:if>
 
     </div>
@@ -200,6 +254,22 @@ updateDateTime();
     </div>
 
 </div>
+    <script>
 
+    function toggleEdit(id)
+    {
+        const element = document.getElementById("edit-" + id);
+
+        if(element.style.display === "none")
+        {
+            element.style.display = "block";
+        }
+        else
+        {
+            element.style.display = "none";
+        }
+    }
+
+    </script>
 </body>
 </html>
