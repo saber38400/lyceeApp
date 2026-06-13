@@ -109,6 +109,7 @@ setInterval(updateDateTime, 1000);
 
 updateDateTime();
 
+
 </script>
 
 <body>
@@ -125,7 +126,9 @@ updateDateTime();
     <p>Bienvenue ${sessionScope.username}</p>
 
     <div class="menu">
-        <a href="#">Messagerie</a>
+        <a href="${pageContext.request.contextPath}/messages">
+            Messagerie (${unreadCount})
+        </a>        
         <a href="#">Emploi du temps</a>
         <a href="#">Notes</a>
         <a href="${pageContext.request.contextPath}/logout">Logout</a>
@@ -172,16 +175,29 @@ updateDateTime();
 
             <div>
 
-                <button onclick="toggleEdit('${post.id}')">
+         <c:if test="${not empty post.content}">
+
+            <button onclick="toggleEdit('${post.id}')">
                     Modifier
+            </button>
+
+        <c:if test="${not empty post.content}">
+            <a href="${pageContext.request.contextPath}/deletePost/${post.id}">
+                <button>
+                    Supprimer
                 </button>
+            </a>
+        </c:if>
 
-                <a href="${pageContext.request.contextPath}/deletePost/${post.id}">
-                    <button type="button">
-                        Supprimer
-                    </button>
-                </a>
+        <c:if test="${not empty post.content and not empty post.fileName}">
+            <a href="${pageContext.request.contextPath}/deletePublication/${post.id}">
+                <button>
+                    Supprimer publication
+                </button>
+            </a>
+        </c:if>
 
+        </c:if>
             </div>
 
         </div>

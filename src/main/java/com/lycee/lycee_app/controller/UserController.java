@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.lycee.lycee_app.repository.MessageRepository;
 import com.lycee.lycee_app.repository.PostRepository;
 import com.lycee.lycee_app.model.User;
 import com.lycee.lycee_app.repository.UserRepository;
@@ -28,6 +30,8 @@ public class UserController
     @Autowired
     private PostRepository postRepo;
 
+    @Autowired
+    MessageRepository messageRepo;
 
     @RequestMapping("/")
     public String home() 
@@ -71,12 +75,30 @@ public class UserController
         return mv;
     }
 
-        @GetMapping("/dummy")
-        public String dummy(Model model)
-        {
-            model.addAttribute("posts", postRepo.findAll());
-            return "dummy";
-        }
+    @GetMapping("/dummy")
+    public String dummy(
+            Model model,
+            HttpSession session)
+    {
+        String username =
+            (String) session.getAttribute("username");
+
+        long unreadCount =
+            messageRepo
+            .countByReceiverAndReadMessageFalse(
+                    username);
+
+        model.addAttribute(
+            "unreadCount",
+            unreadCount);
+
+        model.addAttribute(
+            "posts",
+            postRepo.findAll());
+
+        return "dummy";
+    }
+
 
         @PostMapping("/login")
         public String login_user(@RequestParam("user_email") String email,
