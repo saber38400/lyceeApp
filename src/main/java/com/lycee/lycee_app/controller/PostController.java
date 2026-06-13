@@ -69,36 +69,27 @@ public class PostController {
         return "redirect:/dummy";
     }
 
-    @GetMapping("/deletePost/{id}")
-    public String deletePost(@PathVariable Integer id) {
+        @GetMapping("/deletePost/{id}")
+        public String deletePost(@PathVariable Integer id)
+        {
+            Post post = postRepo.findById(id).orElse(null);
 
-        Post post = postRepo.findById(id).orElse(null);
+            if(post != null)
+            {
+                if(post.getFileName() != null)
+                {
+                    post.setContent(null);
 
-        if(post != null) {
-
-            if(post.getFileName() != null) {
-
-                try {
-
-                    String uploadDir =
-                            System.getProperty("user.dir")
-                            + "/uploads/";
-
-                    Path filePath =
-                            Paths.get(uploadDir + post.getFileName());
-
-                    Files.deleteIfExists(filePath);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    postRepo.save(post);
                 }
+            else
+            {
+                postRepo.delete(post);
             }
-
-            postRepo.delete(post);
         }
 
         return "redirect:/dummy";
-    }
+        }
 
     @PostMapping("/editPost")
     public String editPost(
@@ -149,12 +140,55 @@ public class PostController {
                 file.delete();
             }
 
-            post.setFileName(null);
-            post.setFileType(null);
+            boolean hasText =
+                post.getContent() != null &&
+                !post.getContent().trim().isEmpty();
+            
+            if(hasText)
+            {
+                post.setFileName(null);
+                post.setFileType(null);
 
-            postRepo.save(post);
+                postRepo.save(post);
+        }
+            else
+            {
+                postRepo.delete(post);
+            }
         }
 
         return "redirect:/dummy";
+    }
+
+    @GetMapping("/deletePublication/{id}")
+    public String deletePublication(@PathVariable Integer id)
+    {
+        Post post = postRepo.findById(id).orElse(null);
+
+        if(post != null)
+        {
+            if(post.getFileName() != null)
+            {
+                try
+                {
+                String uploadDir =
+                        System.getProperty("user.dir")
+                        + "/uploads/";
+
+                Path filePath =
+                        Paths.get(uploadDir + post.getFileName());
+
+                Files.deleteIfExists(filePath);
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        postRepo.delete(post);
+    }
+
+    return "redirect:/dummy";
     }
 }
