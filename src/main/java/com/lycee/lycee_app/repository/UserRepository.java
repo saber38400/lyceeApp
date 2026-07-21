@@ -14,4 +14,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 		@Query("from User where user_email=?1")
 		public List<User> findByUserEmail(String user_email);
 
+		List<User> findAllByOrderByUser_fnameAsc();
 }

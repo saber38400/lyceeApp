@@ -105,7 +105,6 @@ function updateDateTime()
     document.getElementById("clock").innerHTML = time;
 }
 
-setInterval(updateDateTime, 1000);
 
 updateDateTime();
 
