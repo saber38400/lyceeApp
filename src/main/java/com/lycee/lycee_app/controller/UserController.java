@@ -80,6 +80,7 @@ public class UserController
             Model model,
             HttpSession session)
     {
+
         String username =
             (String) session.getAttribute("username");
 
@@ -95,6 +96,17 @@ public class UserController
         model.addAttribute(
             "posts",
             postRepo.findAll());
+
+        String currentUser =
+            (String) session.getAttribute("username");
+
+        long unread =
+            messageRepo
+            .countByReceiverAndReadMessageFalse(currentUser);
+
+        model.addAttribute(
+            "unreadCount",
+            unread);
 
         return "dummy";
     }
