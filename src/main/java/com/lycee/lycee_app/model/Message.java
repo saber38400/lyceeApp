@@ -2,6 +2,7 @@ package com.lycee.lycee_app.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "messages")
@@ -60,5 +61,11 @@ public class Message {
 
     public LocalDateTime getSendDate() {
         return sendDate;
+    }
+
+    public String getFormattedSendDate() {
+        return sendDate.format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+        );
     }
 }

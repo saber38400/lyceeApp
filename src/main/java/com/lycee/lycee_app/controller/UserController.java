@@ -1,6 +1,9 @@
 package com.lycee.lycee_app.controller;
 
 import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +60,11 @@ public class UserController
     }
     
     @PostMapping("/addUser")
-    public ModelAndView addUser(@RequestParam("user_email") String user_email, User user)
-    {
+    public ModelAndView addUser(
+            @RequestParam("user_email") String user_email,
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            User user) throws IOException
+     {
         ModelAndView mv=new ModelAndView("success");
         List<User> list= urepo.findByUserEmail(user_email);
         
@@ -72,6 +78,29 @@ public class UserController
         if(user != null)
         {
             user.setUser_pass(passwordEncoder.encode(user.getUser_pass()));
+
+            if(photo != null && !photo.isEmpty())
+            {
+                String fileName =
+                        System.currentTimeMillis()
+                        + "_"
+                        + photo.getOriginalFilename();
+
+                String uploadDir =
+                        System.getProperty("user.dir")
+                        + "/uploads/";
+
+                File uploadFolder = new File(uploadDir);
+
+                if (!uploadFolder.exists()) {
+                    uploadFolder.mkdirs();
+                }
+
+                photo.transferTo(new File(uploadDir + fileName));
+
+                user.setUser_photo(fileName);
+            }
+
             urepo.save(user);
             mv.addObject("message", "User has been successfully registered.");
         }

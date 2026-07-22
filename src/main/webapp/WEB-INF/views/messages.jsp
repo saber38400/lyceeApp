@@ -49,6 +49,34 @@ body{
     font-weight:bold;
 }
 
+.unreadBadge{
+    background:#e74c3c;
+    color:white;
+    border-radius:50%;
+    padding:2px 7px;
+    font-size:12px;
+    margin-left:6px;
+}
+
+.notifPopup{
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:#333;
+    color:white;
+    padding:15px 20px;
+    border-radius:8px;
+    box-shadow:0px 2px 10px rgba(0,0,0,0.3);
+    z-index:9999;
+    max-width:300px;
+    animation:fadeInNotif 0.3s ease;
+}
+
+@keyframes fadeInNotif{
+    from{ opacity:0; transform:translateY(-10px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
 .container{
     display:flex;
     height:calc(100vh - 90px);
@@ -96,6 +124,27 @@ body{
     align-items:center;
     font-size:20px;
     margin-right:15px;
+}
+
+.avatarImg{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:15px;
+}
+
+.avatarImgSmall{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:10px;
+}
+
+.chatHeaderContent{
+    display:flex;
+    align-items:center;
 }
 
 .userInfo{
@@ -208,16 +257,14 @@ body{
 
     <div class="menu">
 
-        <a href="${pageContext.request.contextPath}/dummy">
+<a href="${pageContext.request.contextPath}/dummy">
             Accueil
         </a>
 
         <a href="#">
-            Messagerie (${unreadCount})
-        </a>
-
-        <a href="${pageContext.request.contextPath}/logout">
-            Déconnexion
+            Messagerie
+            <span class="unreadBadge"
+                  style="${unreadCount > 0 ? '' : 'display:none;'}">${unreadCount}</span>
         </a>
 
     </div>
@@ -238,15 +285,26 @@ body{
 
     <c:forEach var="user" items="${users}">
 
+    <c:if test="${user.user_email != currentUser}">
+
         <div class="userCard"
              onclick="openConversation('${user.user_email}',
                                        '${user.user_fname} ${user.user_lname}')">
 
-            <div class="avatar">
+            <c:choose>
 
-                ${user.user_fname.substring(0,1)}
+                <c:when test="${not empty user.user_photo}">
+                    <img src="${pageContext.request.contextPath}/uploads/${user.user_photo}"
+                         class="avatarImg" alt="avatar">
+                </c:when>
 
-            </div>
+                <c:otherwise>
+                    <div class="avatar">
+                        ${user.user_fname.substring(0,1)}
+                    </div>
+                </c:otherwise>
+
+            </c:choose>
 
             <div class="userInfo">
 
@@ -269,16 +327,54 @@ body{
 
         </div>
 
+    </c:if>
+
     </c:forEach>
 
 </div>
 
 <div class="rightPanel">
 
+    <c:set var="conversationUser" value="${null}" />
+
+    <c:forEach var="u" items="${users}">
+        <c:if test="${u.user_email == receiver}">
+            <c:set var="conversationUser" value="${u}" />
+        </c:if>
+    </c:forEach>
+
     <div class="chatHeader"
          id="chatHeader">
 
-        Sélectionnez une conversation
+        <c:choose>
+
+            <c:when test="${not empty conversationUser}">
+
+                <div class="chatHeaderContent">
+
+                    <c:choose>
+                        <c:when test="${not empty conversationUser.user_photo}">
+                            <img src="${pageContext.request.contextPath}/uploads/${conversationUser.user_photo}"
+                                 class="avatarImgSmall" alt="avatar">
+                        </c:when>
+                        <c:otherwise>
+                            <div class="avatar">
+                                ${conversationUser.user_fname.substring(0,1)}
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+
+                    ${conversationUser.user_fname} ${conversationUser.user_lname}
+
+                </div>
+
+            </c:when>
+
+            <c:otherwise>
+                Sélectionnez une conversation
+            </c:otherwise>
+
+        </c:choose>
 
     </div>
 
@@ -301,7 +397,7 @@ body{
 
                 <div class="time">
 
-                    ${message.sendDate}
+                    ${message.formattedSendDate}
 
                 </div>
 
@@ -321,7 +417,7 @@ body{
 
                 <div class="time">
 
-                    ${message.sendDate}
+                    ${message.formattedSendDate}
 
                 </div>
 
@@ -372,13 +468,13 @@ body{
 function openConversation(email)
 {
     window.location =
-        "${pageContext.request.contextPath}/messages?user=" + email;
+        "${pageContext.request.contextPath}/messages/" + email;
 }
 
 const receiverField = document.getElementById("receiver");
 
 const currentConversation =
-"${selectedUser}";
+"${receiver}";
 
 if(receiverField)
 {
@@ -405,28 +501,68 @@ if(input)
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
 <script>
 
-let socket =
-new SockJS("${pageContext.request.contextPath}/chat");
+let notifSocket =
+    new SockJS("${pageContext.request.contextPath}/chat");
 
-let stompClient =
-Stomp.over(socket);
+let notifStomp =
+    Stomp.over(notifSocket);
 
-stompClient.connect({}, function(){
+const myUsername = "${sessionScope.username}";
+const openReceiver = "${receiver}";
 
-    stompClient.subscribe(
-        "/user/queue/messages",
+notifStomp.connect({}, function() {
 
-        function(message){
+    notifStomp.subscribe(
+        "/topic/messages/" + myUsername,
 
-            location.reload();
+        function(frame) {
+
+            const message = JSON.parse(frame.body);
+
+            if(openReceiver !== "" && message.sender === openReceiver) {
+
+                location.reload();
+
+            } else {
+
+                showNotificationPopup(message.sender, message.content);
+                incrementUnreadBadge();
+
+            }
 
         });
 
 });
+
+function showNotificationPopup(sender, content) {
+
+    const popup = document.createElement("div");
+    popup.className = "notifPopup";
+    popup.innerHTML =
+        "<strong>" + sender + "</strong><br>" + content;
+
+    document.body.appendChild(popup);
+
+    setTimeout(function() {
+        popup.remove();
+    }, 4000);
+}
+
+function incrementUnreadBadge() {
+
+    document.querySelectorAll(".unreadBadge").forEach(function(badge) {
+
+        let current = parseInt(badge.textContent) || 0;
+        current = current + 1;
+
+        badge.textContent = current;
+        badge.style.display = "inline-block";
+
+    });
+}
 
 </script>

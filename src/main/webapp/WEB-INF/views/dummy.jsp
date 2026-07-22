@@ -65,6 +65,34 @@ button{
     font-weight:bold;
 }
 
+.unreadBadge{
+    background:#e74c3c;
+    color:white;
+    border-radius:50%;
+    padding:2px 7px;
+    font-size:12px;
+    margin-left:6px;
+}
+
+.notifPopup{
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:#333;
+    color:white;
+    padding:15px 20px;
+    border-radius:8px;
+    box-shadow:0px 2px 10px rgba(0,0,0,0.3);
+    z-index:9999;
+    max-width:300px;
+    animation:fadeInNotif 0.3s ease;
+}
+
+@keyframes fadeInNotif{
+    from{ opacity:0; transform:translateY(-10px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
 .post{
     background:#ffffff;
     padding:15px;
@@ -105,9 +133,10 @@ function updateDateTime()
     document.getElementById("clock").innerHTML = time;
 }
 
-
-updateDateTime();
-
+window.addEventListener("DOMContentLoaded", function() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+});
 
 </script>
 
@@ -126,8 +155,10 @@ updateDateTime();
 
     <div class="menu">
         <a href="${pageContext.request.contextPath}/messages">
-            Messagerie (${unreadCount})
-        </a>        
+            Messagerie
+            <span class="unreadBadge"
+                  style="${unreadCount > 0 ? '' : 'display:none;'}">${unreadCount}</span>
+        </a>
         <a href="#">Emploi du temps</a>
         <a href="#">Notes</a>
         <a href="${pageContext.request.contextPath}/logout">Logout</a>
@@ -286,5 +317,63 @@ updateDateTime();
     }
 
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+
+let notifSocket =
+    new SockJS("${pageContext.request.contextPath}/chat");
+
+let notifStomp =
+    Stomp.over(notifSocket);
+
+const myUsername = "${sessionScope.username}";
+
+notifStomp.connect({}, function() {
+
+    notifStomp.subscribe(
+        "/topic/messages/" + myUsername,
+
+        function(frame) {
+
+            const message = JSON.parse(frame.body);
+
+            showNotificationPopup(message.sender, message.content);
+            incrementUnreadBadge();
+
+        });
+
+});
+
+function showNotificationPopup(sender, content) {
+
+    const popup = document.createElement("div");
+    popup.className = "notifPopup";
+    popup.innerHTML =
+        "<strong>" + sender + "</strong><br>" + content;
+
+    document.body.appendChild(popup);
+
+    setTimeout(function() {
+        popup.remove();
+    }, 4000);
+}
+
+function incrementUnreadBadge() {
+
+    document.querySelectorAll(".unreadBadge").forEach(function(badge) {
+
+        let current = parseInt(badge.textContent) || 0;
+        current = current + 1;
+
+        badge.textContent = current;
+        badge.style.display = "inline-block";
+
+    });
+}
+
+</script>
 </body>
 </html>
