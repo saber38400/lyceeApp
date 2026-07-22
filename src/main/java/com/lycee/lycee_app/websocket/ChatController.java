@@ -1,4 +1,4 @@
-package com.lycee.lycee_app.controller;
+package com.lycee.lycee_app.websocket;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
