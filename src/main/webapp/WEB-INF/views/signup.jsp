@@ -118,8 +118,7 @@ hr {
 </style>
 </head>
 <body>
-<form action="addUser" style="border:1px solid #ccc" method="post">
-  <div class="container">
+<form action="addUser" style="border:1px solid #ccc" method="post" enctype="multipart/form-data">  <div class="container">
     <h1>Sign Up</h1>
     <p>Please fill in this form to create an account.</p>
     <hr>
@@ -138,6 +137,9 @@ hr {
 
     <label for="mobile"><b>Mobile</b></label>
     <input type="text" placeholder="Enter Mobile" name="user_mobile" required>
+
+    <label for="photo"><b>Photo de profil (optionnel)</b></label>
+    <input type="file" name="photo" accept="image/*">
     
     <div class="clearfix">
       <button type="button" class="cancelbtn">Cancel</button>

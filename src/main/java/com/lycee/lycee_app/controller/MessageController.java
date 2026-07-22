@@ -18,6 +18,7 @@ import com.lycee.lycee_app.model.User;
 
 import com.lycee.lycee_app.repository.MessageRepository;
 import com.lycee.lycee_app.repository.UserRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Controller
 public class MessageController {
@@ -28,7 +29,10 @@ public class MessageController {
     @Autowired
     private UserRepository userRepo;
 
-    @GetMapping("/messages")
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+@GetMapping("/messages")
     public String messages(
             HttpSession session,
             Model model)
@@ -36,6 +40,11 @@ public class MessageController {
 
         String currentUser =
                 (String) session.getAttribute("username");
+
+        if(currentUser == null)
+        {
+            return "redirect:/login";
+        }
 
         List<User> users =
                 userRepo.findAll();
@@ -46,10 +55,17 @@ public class MessageController {
                 "currentUser",
                 currentUser);
 
+        long unreadCount =
+                messageRepo.countByReceiverAndReadMessageFalse(currentUser);
+
+        model.addAttribute(
+                "unreadCount",
+                unreadCount);
+
         return "messages";
     }
 
-    @GetMapping("/messages/{receiver}")
+@GetMapping("/messages/{receiver}")
     public String conversation(
             @PathVariable String receiver,
             HttpSession session,
@@ -58,6 +74,11 @@ public class MessageController {
 
         String sender =
                 (String) session.getAttribute("username");
+
+        if(sender == null)
+        {
+            return "redirect:/login";
+        }
 
         List<User> users =
                 userRepo.findAll();
@@ -81,6 +102,13 @@ public class MessageController {
                 "currentUser",
                 sender);
 
+        long unreadCount =
+                messageRepo.countByReceiverAndReadMessageFalse(sender);
+
+        model.addAttribute(
+                "unreadCount",
+                unreadCount);
+
         for(Message m : conversation)
         {
 
@@ -98,7 +126,7 @@ public class MessageController {
         return "messages";
     }
 
-    @PostMapping("/sendMessage")
+@PostMapping("/sendMessage")
     public String sendMessage(
 
             @RequestParam String receiver,
@@ -111,6 +139,11 @@ public class MessageController {
 
         String sender =
                 (String) session.getAttribute("username");
+
+        if(sender == null)
+        {
+            return "redirect:/login";
+        }
 
         if(content != null &&
                 !content.trim().isEmpty())
@@ -126,6 +159,10 @@ public class MessageController {
             message.setContent(content);
 
             messageRepo.save(message);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/messages/" + receiver,
+                    message);
 
         }
 

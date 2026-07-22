@@ -19,7 +19,7 @@ public class User
     private String user_email;
     private String user_pass;
     private String user_mobile;
-
+    private String user_photo;
     public Integer getUser_id() {
         return user_id;
     }
@@ -55,6 +55,12 @@ public class User
     }
     public void setUser_mobile(String user_mobile) {
         this.user_mobile = user_mobile;
+    }
+    public String getUser_photo() {
+        return user_photo;
+    }
+    public void setUser_photo(String user_photo) {
+        this.user_photo = user_photo;
     }
     @Override
     public String toString() {
