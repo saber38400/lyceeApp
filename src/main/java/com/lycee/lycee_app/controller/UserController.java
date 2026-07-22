@@ -17,6 +17,7 @@ import com.lycee.lycee_app.repository.MessageRepository;
 import com.lycee.lycee_app.repository.PostRepository;
 import com.lycee.lycee_app.model.User;
 import com.lycee.lycee_app.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 @Controller
@@ -29,6 +30,9 @@ public class UserController
 
     @Autowired
     private PostRepository postRepo;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     MessageRepository messageRepo;
@@ -54,7 +58,7 @@ public class UserController
     
     @PostMapping("/addUser")
     public ModelAndView addUser(@RequestParam("user_email") String user_email, User user)
-     {
+    {
         ModelAndView mv=new ModelAndView("success");
         List<User> list= urepo.findByUserEmail(user_email);
         
@@ -67,6 +71,7 @@ public class UserController
     {
         if(user != null)
         {
+            user.setUser_pass(passwordEncoder.encode(user.getUser_pass()));
             urepo.save(user);
             mv.addObject("message", "User has been successfully registered.");
         }
@@ -112,15 +117,16 @@ public class UserController
     }
 
 
-        @PostMapping("/login")
+    @PostMapping("/login")
         public String login_user(@RequestParam("user_email") String email,
                          @RequestParam("user_pass") String pass,
                          HttpSession session,
                          ModelMap modelMap)
         {
-        User user = urepo.findByUserEmailAndUserPass(email, pass);
+        List<User> list = urepo.findByUserEmail(email);
+        User user = list.isEmpty() ? null : list.get(0);
 
-        if(user != null)
+        if(user != null && passwordEncoder.matches(pass, user.getUser_pass()))
         {
             session.setAttribute("username", email);
 

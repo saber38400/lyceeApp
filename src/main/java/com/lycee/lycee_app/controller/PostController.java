@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import com.lycee.lycee_app.model.Post;
 import com.lycee.lycee_app.repository.PostRepository;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class PostController {
@@ -31,11 +32,18 @@ public class PostController {
     public String createPost(
             @RequestParam("content") String content,
             @RequestParam("file") MultipartFile file,
-            Model model) throws IOException {
+            Model model,
+            HttpSession session) throws IOException {
+
+        String username = (String) session.getAttribute("username");
+
+        if(username == null) {
+            return "redirect:/login";
+        }
 
         Post post = new Post();
 
-        post.setAuthor("Saber");
+        post.setAuthor(username);
         post.setContent(content);
 
         if (!file.isEmpty()) {
@@ -69,9 +77,13 @@ public class PostController {
         return "redirect:/dummy";
     }
 
-        @GetMapping("/deletePost/{id}")
-        public String deletePost(@PathVariable Integer id)
+    @GetMapping("/deletePost/{id}")
+        public String deletePost(@PathVariable Integer id, HttpSession session)
         {
+            if(session.getAttribute("username") == null) {
+                return "redirect:/login";
+            }
+
             Post post = postRepo.findById(id).orElse(null);
 
             if(post != null)
@@ -92,9 +104,14 @@ public class PostController {
         }
 
     @PostMapping("/editPost")
-    public String editPost(
-            @RequestParam("id") Integer id,
-            @RequestParam("content") String content) {
+        public String editPost(
+                @RequestParam("id") Integer id,
+                @RequestParam("content") String content,
+                HttpSession session) {
+
+            if(session.getAttribute("username") == null) {
+                return "redirect:/login";
+        }
 
         Post post = postRepo.findById(id).orElse(null);
 
@@ -128,13 +145,18 @@ public class PostController {
     }
 
     @GetMapping("/deleteFile/{id}")
-    public String deleteFile(@PathVariable Integer id) {
+        public String deleteFile(@PathVariable Integer id, HttpSession session) {
+
+            if(session.getAttribute("username") == null) {
+            return "redirect:/login";
+        }
 
         Post post = postRepo.findById(id).orElse(null);
 
         if(post != null && post.getFileName() != null) {
 
-            File file = new File("C:/uploads/" + post.getFileName());
+    String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            File file = new File(uploadDir + post.getFileName());
 
             if(file.exists()) {
                 file.delete();
@@ -161,8 +183,12 @@ public class PostController {
     }
 
     @GetMapping("/deletePublication/{id}")
-    public String deletePublication(@PathVariable Integer id)
-    {
+        public String deletePublication(@PathVariable Integer id, HttpSession session)
+        {
+            if(session.getAttribute("username") == null) {
+            return "redirect:/login";
+        }
+
         Post post = postRepo.findById(id).orElse(null);
 
         if(post != null)

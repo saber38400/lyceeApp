@@ -22,5 +22,4 @@ public interface MessageRepository
                 (m.sender = ?2 AND m.receiver = ?1)
             ORDER BY m.sendDate
             """)
-    List<Message> getConversation(String user1, String user2);
-}
+List<Message> findConversation(String user1, String user2);}
