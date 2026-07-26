@@ -1,6 +1,9 @@
 package com.lycee.lycee_app.controller;
 
 import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -109,6 +112,8 @@ public class MessageController {
                 "unreadCount",
                 unreadCount);
 
+        Message lastReadMessage = null;
+
         for(Message m : conversation)
         {
 
@@ -119,7 +124,18 @@ public class MessageController {
 
                         messageRepo.save(m);
 
+                        lastReadMessage = m;
+
                 }
+
+        }
+
+        if(lastReadMessage != null)
+        {
+
+                messagingTemplate.convertAndSend(
+                        "/topic/read/" + lastReadMessage.getSender(),
+                        lastReadMessage);
 
         }
 
@@ -131,9 +147,11 @@ public class MessageController {
 
             @RequestParam String receiver,
 
-            @RequestParam String content,
+            @RequestParam(required = false) String content,
 
-            HttpSession session)
+            @RequestParam(value = "file", required = false) MultipartFile file,
+
+            HttpSession session) throws IOException
 
     {
 
@@ -145,8 +163,13 @@ public class MessageController {
             return "redirect:/login";
         }
 
-        if(content != null &&
-                !content.trim().isEmpty())
+        boolean hasContent =
+                content != null && !content.trim().isEmpty();
+
+        boolean hasFile =
+                file != null && !file.isEmpty();
+
+        if(hasContent || hasFile)
         {
 
             Message message =
@@ -156,7 +179,31 @@ public class MessageController {
 
             message.setReceiver(receiver);
 
-            message.setContent(content);
+            message.setContent(hasContent ? content : "");
+
+            if(hasFile)
+            {
+
+                String fileName =
+                        System.currentTimeMillis()
+                        + "_"
+                        + file.getOriginalFilename();
+
+                String uploadDir =
+                        System.getProperty("user.dir")
+                        + "/uploads/";
+
+                File uploadFolder = new File(uploadDir);
+
+                if (!uploadFolder.exists()) {
+                    uploadFolder.mkdirs();
+                }
+
+                file.transferTo(new File(uploadDir + fileName));
+
+                message.setFileName(fileName);
+
+            }
 
             messageRepo.save(message);
 
