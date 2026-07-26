@@ -19,7 +19,9 @@ public class Message {
     @Column(length = 5000)
     private String content;
 
-    private boolean readMessage = false;
+private boolean readMessage = false;
+
+    private String fileName;
 
     private LocalDateTime sendDate = LocalDateTime.now();
 
@@ -63,9 +65,17 @@ public class Message {
         return sendDate;
     }
 
-    public String getFormattedSendDate() {
+public String getFormattedSendDate() {
         return sendDate.format(
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
         );
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }

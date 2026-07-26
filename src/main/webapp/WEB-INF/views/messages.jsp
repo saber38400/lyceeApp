@@ -5,6 +5,9 @@ pageEncoding="UTF-8"%>
 <%@ taglib prefix="c"
 uri="jakarta.tags.core"%>
 
+<%@ taglib prefix="fn"
+uri="jakarta.tags.functions"%>
+
 <!DOCTYPE html>
 
 <html>
@@ -32,6 +35,7 @@ body{
     background:#4a69bd;
     color:white;
     padding:20px;
+    position:relative;
 }
 
 .header h1{
@@ -72,6 +76,21 @@ body{
     animation:fadeInNotif 0.3s ease;
 }
 
+.typingIndicator{
+    padding:8px 20px;
+    font-style:italic;
+    font-size:13px;
+    color:#888;
+    display:none;
+}
+
+.statusIndicator{
+    font-size:11px;
+    color:#4a69bd;
+    text-align:right;
+    margin-top:2px;
+}
+
 @keyframes fadeInNotif{
     from{ opacity:0; transform:translateY(-10px); }
     to{ opacity:1; transform:translateY(0); }
@@ -92,13 +111,16 @@ body{
 .search{
     padding:15px;
     border-bottom:1px solid #ddd;
+    box-sizing:border-box;
 }
 
 .search input{
     width:100%;
+    box-sizing:border-box;
     padding:10px;
-    border-radius:20px;
-    border:1px solid #ccc;
+    border:1px solid #ddd;
+    border-radius:6px;
+    font-size:14px;
 }
 
 .userCard{
@@ -174,6 +196,16 @@ body{
     font-size:20px;
 }
 
+.datetime{
+    position:absolute;
+    top:20px;
+    right:30px;
+    color:white;
+    text-align:right;
+    font-size:14px;
+    font-weight:bold;
+}
+
 .messages{
     flex:1;
     overflow-y:auto;
@@ -183,13 +215,15 @@ body{
 
 .messageMine{
     display:flex;
-    justify-content:flex-end;
+    flex-direction:column;
+    align-items:flex-end;
     margin-bottom:15px;
 }
 
 .messageOther{
     display:flex;
-    justify-content:flex-start;
+    flex-direction:column;
+    align-items:flex-start;
     margin-bottom:15px;
 }
 
@@ -236,6 +270,39 @@ body{
     background:#365899;
 }
 
+.messageImage{
+    max-width:220px;
+    max-height:220px;
+    border-radius:10px;
+    display:block;
+    margin-top:6px;
+}
+
+.messageVideo{
+    max-width:250px;
+    border-radius:10px;
+    display:block;
+    margin-top:6px;
+}
+
+.messageFile{
+    display:inline-block;
+    margin-top:6px;
+    padding:8px 12px;
+    background:#f0f0f0;
+    border-radius:8px;
+    text-decoration:none;
+    color:#333;
+    font-size:13px;
+}
+
+.fileButton{
+    cursor:pointer;
+    font-size:22px;
+    padding:0 10px;
+    user-select:none;
+}
+
 .online{
     width:10px;
     height:10px;
@@ -253,6 +320,11 @@ body{
 
 <div class="header">
 
+    <div class="datetime">
+        <div id="date"></div>
+        <div id="clock"></div>
+    </div>
+
     <h1>Messagerie privée</h1>
 
     <div class="menu">
@@ -262,9 +334,15 @@ body{
         </a>
 
         <a href="#">
-            Messagerie
-            <span class="unreadBadge"
-                  style="${unreadCount > 0 ? '' : 'display:none;'}">${unreadCount}</span>
+            Emploi du temps
+        </a>
+
+        <a href="#">
+            Notes
+        </a>
+
+        <a href="${pageContext.request.contextPath}/logout">
+            Logout
         </a>
 
     </div>
@@ -279,7 +357,9 @@ body{
 
         <input
             type="text"
-            placeholder="Rechercher un utilisateur...">
+            id="contactSearch"
+            placeholder="Rechercher un utilisateur..."
+            autocomplete="off">
 
     </div>
 
@@ -288,6 +368,7 @@ body{
     <c:if test="${user.user_email != currentUser}">
 
         <div class="userCard"
+             data-name="${user.user_fname} ${user.user_lname} ${user.user_email}"
              onclick="openConversation('${user.user_email}',
                                        '${user.user_fname} ${user.user_lname}')">
 
@@ -327,9 +408,13 @@ body{
 
         </div>
 
-    </c:if>
+</c:if>
 
     </c:forEach>
+
+    <div id="noResults" style="display:none; padding:20px; text-align:center; color:#888;">
+        Aucun résultat
+    </div>
 
 </div>
 
@@ -368,6 +453,8 @@ body{
 
                 </div>
 
+                <div class="typingIndicator" id="typingIndicator"></div>
+
             </c:when>
 
             <c:otherwise>
@@ -381,6 +468,14 @@ body{
     <div class="messages"
          id="messages">
 
+<c:set var="lastOwnMessageId" value="0" />
+
+<c:forEach var="m" items="${messages}">
+    <c:if test="${m.sender == sessionScope.username}">
+        <c:set var="lastOwnMessageId" value="${m.id}" />
+    </c:if>
+</c:forEach>
+
 <c:forEach var="message" items="${messages}">
 
     <c:choose>
@@ -393,6 +488,32 @@ body{
 
                     ${message.content}
 
+                    <c:if test="${not empty message.fileName}">
+
+                        <c:set var="lowerFileName" value="${fn:toLowerCase(message.fileName)}" />
+
+                        <c:choose>
+
+                            <c:when test="${fn:endsWith(lowerFileName, '.jpg') or fn:endsWith(lowerFileName, '.jpeg') or fn:endsWith(lowerFileName, '.png') or fn:endsWith(lowerFileName, '.gif') or fn:endsWith(lowerFileName, '.webp')}">
+                                <img src="${pageContext.request.contextPath}/uploads/${message.fileName}" class="messageImage" alt="image">
+                            </c:when>
+
+                            <c:when test="${fn:endsWith(lowerFileName, '.mp4') or fn:endsWith(lowerFileName, '.webm') or fn:endsWith(lowerFileName, '.mov')}">
+                                <video controls class="messageVideo">
+                                    <source src="${pageContext.request.contextPath}/uploads/${message.fileName}">
+                                </video>
+                            </c:when>
+
+                            <c:otherwise>
+                                <a href="${pageContext.request.contextPath}/uploads/${message.fileName}" target="_blank" class="messageFile">
+                                    📄 ${message.fileName}
+                                </a>
+                            </c:otherwise>
+
+                        </c:choose>
+
+                    </c:if>
+
                 </div>
 
                 <div class="time">
@@ -400,6 +521,17 @@ body{
                     ${message.formattedSendDate}
 
                 </div>
+
+                <c:if test="${message.id == lastOwnMessageId}">
+
+                    <div class="statusIndicator" id="status-${message.id}">
+                        <c:choose>
+                            <c:when test="${message.readMessage}">Lu ✓✓</c:when>
+                            <c:otherwise>Envoyé ✓</c:otherwise>
+                        </c:choose>
+                    </div>
+
+                </c:if>
 
             </div>
 
@@ -412,6 +544,32 @@ body{
                 <div class="bubbleOther">
 
                     ${message.content}
+
+                    <c:if test="${not empty message.fileName}">
+
+                        <c:set var="lowerFileName" value="${fn:toLowerCase(message.fileName)}" />
+
+                        <c:choose>
+
+                            <c:when test="${fn:endsWith(lowerFileName, '.jpg') or fn:endsWith(lowerFileName, '.jpeg') or fn:endsWith(lowerFileName, '.png') or fn:endsWith(lowerFileName, '.gif') or fn:endsWith(lowerFileName, '.webp')}">
+                                <img src="${pageContext.request.contextPath}/uploads/${message.fileName}" class="messageImage" alt="image">
+                            </c:when>
+
+                            <c:when test="${fn:endsWith(lowerFileName, '.mp4') or fn:endsWith(lowerFileName, '.webm') or fn:endsWith(lowerFileName, '.mov')}">
+                                <video controls class="messageVideo">
+                                    <source src="${pageContext.request.contextPath}/uploads/${message.fileName}">
+                                </video>
+                            </c:when>
+
+                            <c:otherwise>
+                                <a href="${pageContext.request.contextPath}/uploads/${message.fileName}" target="_blank" class="messageFile">
+                                    📄 ${message.fileName}
+                                </a>
+                            </c:otherwise>
+
+                        </c:choose>
+
+                    </c:if>
 
                 </div>
 
@@ -434,7 +592,8 @@ body{
 <div class="sendArea">
 
     <form action="${pageContext.request.contextPath}/sendMessage"
-          method="post">
+          method="post"
+          enctype="multipart/form-data">
 
         <input
             type="hidden"
@@ -446,8 +605,15 @@ body{
             id="messageInput"
             name="content"
             placeholder="Écrire un message..."
-            autocomplete="off"
-            required>
+            autocomplete="off">
+
+        <label for="fileInput" class="fileButton">📎</label>
+        <input
+            type="file"
+            id="fileInput"
+            name="file"
+            accept=".pdf,image/*,video/*"
+            style="display:none;">
 
         <button type="submit">
 
@@ -514,6 +680,8 @@ let notifStomp =
 const myUsername = "${sessionScope.username}";
 const openReceiver = "${receiver}";
 
+let typingTimeout;
+
 notifStomp.connect({}, function() {
 
     notifStomp.subscribe(
@@ -529,14 +697,90 @@ notifStomp.connect({}, function() {
 
             } else {
 
-                showNotificationPopup(message.sender, message.content);
+                showNotificationPopup(message.sender, message.content || "📎 Fichier envoyé");
                 incrementUnreadBadge();
 
             }
 
         });
 
+    notifStomp.subscribe(
+        "/topic/typing/" + myUsername,
+
+        function(frame) {
+
+            const typingMessage = JSON.parse(frame.body);
+
+            if(openReceiver !== "" && typingMessage.sender === openReceiver) {
+
+                showTypingIndicator(typingMessage.sender);
+
+            }
+
+        });
+
+    notifStomp.subscribe(
+        "/topic/read/" + myUsername,
+
+        function(frame) {
+
+            const readMessage = JSON.parse(frame.body);
+
+            const statusDiv =
+                document.getElementById("status-" + readMessage.id);
+
+            if(statusDiv) {
+                statusDiv.textContent = "Lu ✓✓";
+            }
+
+        });
+
 });
+
+function showTypingIndicator(senderEmail) {
+
+    let senderName = senderEmail;
+
+    <c:forEach var="u" items="${users}">
+        if(senderEmail === "${u.user_email}") {
+            senderName = "${u.user_fname} ${u.user_lname}";
+        }
+    </c:forEach>
+
+    const indicator = document.getElementById("typingIndicator");
+
+    indicator.textContent = senderName + " est en train d'écrire...";
+    indicator.style.display = "block";
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(function() {
+        indicator.style.display = "none";
+    }, 3000);
+}
+
+const messageInputField = document.getElementById("messageInput");
+
+if(messageInputField) {
+
+    messageInputField.addEventListener("input", function() {
+
+        if(openReceiver !== "") {
+
+            notifStomp.send(
+                "/app/typing",
+                {},
+                JSON.stringify({
+                    sender: myUsername,
+                    receiver: openReceiver
+                })
+            );
+
+        }
+
+    });
+
+}
 
 function showNotificationPopup(sender, content) {
 
@@ -564,5 +808,60 @@ function incrementUnreadBadge() {
 
     });
 }
+
+const contactSearchField = document.getElementById("contactSearch");
+
+if(contactSearchField) {
+
+    contactSearchField.addEventListener("input", function() {
+
+        const searchTerm = contactSearchField.value.toLowerCase();
+
+        let visibleCount = 0;
+
+        document.querySelectorAll(".userCard").forEach(function(card) {
+
+            const name = card.dataset.name.toLowerCase();
+
+            if(name.includes(searchTerm)) {
+                card.style.display = "";
+                visibleCount = visibleCount + 1;
+            } else {
+                card.style.display = "none";
+            }
+
+        });
+
+        const noResultsDiv = document.getElementById("noResults");
+
+        if(visibleCount === 0) {
+            noResultsDiv.style.display = "block";
+        } else {
+            noResultsDiv.style.display = "none";
+        }
+
+    });
+
+}
+
+function updateDateTime()
+{
+    const now = new Date();
+
+    const date = now.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    const time = now.toLocaleTimeString('fr-FR');
+
+    document.getElementById("date").innerHTML = date;
+    document.getElementById("clock").innerHTML = time;
+}
+
+updateDateTime();
+setInterval(updateDateTime, 1000);
 
 </script>
