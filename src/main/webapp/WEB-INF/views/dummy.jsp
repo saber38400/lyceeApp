@@ -21,6 +21,7 @@ body{
     color:white;
     padding:20px;
     text-align:center;
+    position:relative;
 }
 
 .container{
@@ -160,8 +161,7 @@ window.addEventListener("DOMContentLoaded", function() {
                   style="${unreadCount > 0 ? '' : 'display:none;'}">${unreadCount}</span>
         </a>
         <a href="#">Emploi du temps</a>
-        <a href="#">Notes</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
+        <a href="${pageContext.request.contextPath}/notes">Notes</a>        <a href="${pageContext.request.contextPath}/logout">Logout</a>
     </div>
 
 </div>

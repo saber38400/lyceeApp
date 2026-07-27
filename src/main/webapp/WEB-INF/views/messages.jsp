@@ -337,7 +337,7 @@ body{
             Emploi du temps
         </a>
 
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/notes">
             Notes
         </a>
 
