@@ -34,7 +34,8 @@ body{
 .header{
     background:#4a69bd;
     color:white;
-    padding:20px;
+    padding:30px;
+    text-align:center;
     position:relative;
 }
 
@@ -45,6 +46,7 @@ body{
 .menu{
     display:flex;
     gap:20px;
+    justify-content:center;
 }
 
 .menu a{
