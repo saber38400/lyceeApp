@@ -158,6 +158,7 @@ public class UserController
         if(user != null && passwordEncoder.matches(pass, user.getUser_pass()))
         {
             session.setAttribute("username", email);
+            session.setAttribute("isAdmin", user.isAdmin());
 
             modelMap.addAttribute("posts", java.util.Collections.emptyList());
 
