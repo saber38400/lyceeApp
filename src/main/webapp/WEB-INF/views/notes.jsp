@@ -140,7 +140,13 @@ body{
                   style="${unreadCount > 0 ? '' : 'display:none;'}">${unreadCount}</span>
         </a>
 
-        <a href="#">Emploi du temps</a>
+        <a href="${pageContext.request.contextPath}/emploi-du-temps">Emploi du temps</a>
+
+        <a href="${pageContext.request.contextPath}/profil">Espace personnel</a>
+
+        <c:if test="${sessionScope.isAdmin}">
+            <a href="${pageContext.request.contextPath}/admin">Admin</a>
+        </c:if>
 
         <a href="${pageContext.request.contextPath}/logout">Logout</a>
     </div>

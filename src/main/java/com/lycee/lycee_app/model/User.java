@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
@@ -20,7 +21,9 @@ public class User
     private String user_pass;
     private String user_mobile;
     private String user_photo;
-    public Integer getUser_id() {
+    private LocalDate user_birthdate;
+    private String user_classe;
+    private boolean admin = false;    public Integer getUser_id() {
         return user_id;
     }
     public void setUser_id(Integer user_id) {
@@ -61,6 +64,24 @@ public class User
     }
     public void setUser_photo(String user_photo) {
         this.user_photo = user_photo;
+    }
+    public LocalDate getUser_birthdate() {
+        return user_birthdate;
+    }
+    public void setUser_birthdate(LocalDate user_birthdate) {
+        this.user_birthdate = user_birthdate;
+    }
+    public String getUser_classe() {
+        return user_classe;
+    }
+    public void setUser_classe(String user_classe) {
+        this.user_classe = user_classe;
+    }
+    public boolean isAdmin() {
+        return admin;
+    }
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
     @Override
     public String toString() {
