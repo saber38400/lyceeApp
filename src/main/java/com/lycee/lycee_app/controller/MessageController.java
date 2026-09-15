@@ -184,24 +184,37 @@ public class MessageController {
             if(hasFile)
             {
 
-                String fileName =
-                        System.currentTimeMillis()
-                        + "_"
-                        + file.getOriginalFilename();
+                String contentType = file.getContentType();
 
-                String uploadDir =
-                        System.getProperty("user.dir")
-                        + "/uploads/";
+                boolean allowedType =
+                        contentType != null
+                        && (contentType.startsWith("image/")
+                            || contentType.startsWith("video/")
+                            || contentType.equals("application/pdf"));
 
-                File uploadFolder = new File(uploadDir);
+                if(allowedType)
+                {
 
-                if (!uploadFolder.exists()) {
-                    uploadFolder.mkdirs();
+                    String fileName =
+                            System.currentTimeMillis()
+                            + "_"
+                            + file.getOriginalFilename();
+
+                    String uploadDir =
+                            System.getProperty("user.dir")
+                            + "/uploads/";
+
+                    File uploadFolder = new File(uploadDir);
+
+                    if (!uploadFolder.exists()) {
+                        uploadFolder.mkdirs();
+                    }
+
+                    file.transferTo(new File(uploadDir + fileName));
+
+                    message.setFileName(fileName);
+
                 }
-
-                file.transferTo(new File(uploadDir + fileName));
-
-                message.setFileName(fileName);
 
             }
 

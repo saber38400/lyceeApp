@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Entity
-@Table(name = "messages")
+@Table(name = "messages", indexes = {
+    @Index(name = "idx_message_receiver", columnList = "receiver"),
+    @Index(name = "idx_message_sender_receiver", columnList = "sender, receiver")
+})
 public class Message {
 
     @Id
