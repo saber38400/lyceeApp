@@ -40,6 +40,9 @@ public class UserController
     @Autowired
     MessageRepository messageRepo;
 
+    @Autowired
+    private com.lycee.lycee_app.config.LoginAttemptService loginAttemptService;
+
     @RequestMapping("/")
     public String home() 
     {
@@ -146,17 +149,27 @@ public class UserController
     }
 
 
-    @PostMapping("/login")
+        @PostMapping("/login")
         public String login_user(@RequestParam("user_email") String email,
                          @RequestParam("user_pass") String pass,
                          HttpSession session,
                          ModelMap modelMap)
         {
+
+        if(loginAttemptService.isLocked(email))
+        {
+            long remaining = loginAttemptService.getRemainingLockSeconds(email);
+            modelMap.put("error", "Trop de tentatives. Réessayez dans " + remaining + " secondes.");
+            return "login";
+        }
+
         List<User> list = urepo.findByUserEmail(email);
         User user = list.isEmpty() ? null : list.get(0);
 
         if(user != null && passwordEncoder.matches(pass, user.getUser_pass()))
         {
+            loginAttemptService.loginSucceeded(email);
+
             session.setAttribute("username", email);
             session.setAttribute("isAdmin", user.isAdmin());
 
@@ -164,6 +177,9 @@ public class UserController
 
         return "redirect:/dummy";        
         }
+
+        loginAttemptService.loginFailed(email);
+
         modelMap.put("error", "Invalid Account");
 
         return "login";
